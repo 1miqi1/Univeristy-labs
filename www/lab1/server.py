@@ -1,6 +1,7 @@
 import socket, threading, datetime, time
 
 VISITOR_COUNT = 0
+lock = threading.Lock()
 
 def parse_request(request_data):
     if not request_data:
@@ -38,8 +39,10 @@ def handle_client(client_connection):
     path = parse_request(request_data)
     
     if path == "/":
-        VISITOR_COUNT += 1
-        response = generate_response(f"<h1>Hello from Python! Count: {VISITOR_COUNT}</h1>")
+        with lock:
+            count = VISITOR_COUNT
+            VISITOR_COUNT += 1
+        response = generate_response(f"<h1>Hello from Python! Count: {count}</h1>")
     elif path == "/favicon.ico":
         response = generate_response("<h1>404 Not Found</h1>", status_code=404)
     else:
