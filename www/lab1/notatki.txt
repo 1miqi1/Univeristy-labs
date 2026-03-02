@@ -1,0 +1,1 @@
+Czemu w rozwiązaniu jedno wątkowym mogłem otworzyc dwie karty naraz?

@@ -1,6 +1,4 @@
-import socket
-import time
-import datetime
+import socket, threading, datetime, time
 
 VISITOR_COUNT = 0
 
@@ -30,6 +28,31 @@ def generate_response(content, status_code="200 OK"):
     response_str = header + content
     return response_str.encode('utf-8')
 
+def handle_client(client_connection):
+    global VISITOR_COUNT
+    time.sleep(20)
+    # Receive raw bytes (buffer size 1024)
+    request_data = client_connection.recv(1024).decode('utf-8')
+    print(f"--- Received Request ---\n{request_data}\n------------------------")
+    
+    path = parse_request(request_data)
+    
+    if path == "/":
+        VISITOR_COUNT += 1
+        response = generate_response(f"<h1>Hello from Python! Count: {VISITOR_COUNT}</h1>")
+    elif path == "/favicon.ico":
+        response = generate_response("<h1>404 Not Found</h1>", status_code=404)
+    else:
+        response = generate_response(content="",status_code=404)
+            
+
+    client_connection.sendall(response)
+    
+    # Close connection immediately (for now)
+    end_time = datetime.datetime.now().strftime("%H:%M:%S")
+    print(f"<<< Finished request at: {end_time}\n")
+    client_connection.close()
+
 def start_server():
     global VISITOR_COUNT
     
@@ -49,11 +72,12 @@ def start_server():
     
     
     print("Server running on http://localhost:8000 ...")
+    
+    ## Ważne, czemu nie widać tego w przeglądarce
 
     while True:
         # TODO: Accept a new connection
         # client_connection, client_address = ...
-        time.sleep(5)
         
         client_connection, client_address = server_socket.accept()
         
@@ -61,27 +85,10 @@ def start_server():
         start_time = datetime.datetime.now().strftime("%H:%M:%S")
         print(f">>> New Connection started at: {start_time}")
 
-        # Receive raw bytes (buffer size 1024)
-        request_data = client_connection.recv(1024).decode('utf-8')
-        print(f"--- Received Request ---\n{request_data}\n------------------------")
-        
-        path = parse_request(request_data)
-        
-        if path == "/":
-            VISITOR_COUNT += 1
-            response = generate_response(f"<h1>Hello from Python! Count: {VISITOR_COUNT}</h1>")
-        elif path == "/favicon.ico":
-            response = generate_response("<h1>404 Not Found</h1>", status_code=404)
-        else:
-            response = generate_response(content="",status_code=404)
-                
+        threading.Thread(
+            target=handle_client,
+            args=(client_connection,),
+        ).start()
 
-        client_connection.sendall(response)
-        
-        # Close connection immediately (for now)
-        end_time = datetime.datetime.now().strftime("%H:%M:%S")
-        print(f"<<< Finished request at: {end_time}\n")
-        client_connection.close()
-
-if __name__ == '__main__':
+if __name__ == '__main__':  
     start_server()
