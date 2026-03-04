@@ -18,6 +18,25 @@ MIME_TYPES = {
     ".ico":  "image/x-icon",
 }
 
+def parse_post_body(request_data):
+    # The body is separated from headers by a blank line
+    parts = request_data.split("\r\n\r\n", 1)
+    if len(parts) < 2:
+        return {}
+    body = parts[1]
+    # TODO: Split body by '&', then each pair by '='.
+    # Apply unquote_plus() to both key and value — browsers encode
+    # spaces as '+' and special chars as %XX (e.g. "Hello+World%21").
+    # Return a dict like {"name": "Alice", "email": "..."}
+    cells = body.split('&')
+    pairs = [cell.split('=') for cell in cells]
+    
+    
+    out = [[unquote_plus(pair[0]), unquote_plus(pair[1])] for pair in pairs]
+    
+    return dict(out)
+
+
 def read_file(path):
     public_root = os.path.abspath("public")
     abs_path    = os.path.abspath(os.path.join("public", path.lstrip("/")))
@@ -58,27 +77,23 @@ def parse_request(request_data):
 
     return path
 
-def generate_response(content, status_code="200 OK"):
-    header = f"HTTP/1.1 {status_code}\r\n"
-    header += "Content-Type: text/html\r\n"
-    # TODO: Calculate Content-Length (It is crucial!)
-    # header += f"Content-Length: {???}\r\n"
-    header += f"Content-Length: {len(content)}\r\n"
-    
-    header += "\r\n" # The blank line
-    response_str = header + content
-    return response_str.encode('utf-8')
 
 def handle_client(client_connection):
     global VISITOR_COUNT
-    time.sleep(10)
     # Receive raw bytes (buffer size 1024)
     request_data = client_connection.recv(1024).decode('utf-8')
     print(f"--- Received Request ---\n{request_data}\n------------------------")
     
     
     path = parse_request(request_data)
+    
+    if path == '/submit':
+        path = '/confirmation.html'
+        submitted = parse_post_body(request_data)
+        
     content, status, mime = read_file(path if path != "/" else "/index.html")
+    
+    
     response = generate_response(content, status, mime)
     client_connection.sendall(response)
     client_connection.close()
@@ -103,8 +118,6 @@ def start_server():
     
     print("Server running on http://localhost:8000 ...")
     
-    ## Ważne, czemu nie widać tego w przeglądarce
-
     while True:
         # TODO: Accept a new connection
         # client_connection, client_address = ...
@@ -115,12 +128,11 @@ def start_server():
         start_time = datetime.datetime.now().strftime("%H:%M:%S")
         print(f">>> New Connection started at: {start_time}")
         
-        handle_client(client_connection=client_connection)
         
-        # threading.Thread(
-        #     target=handle_client,
-        #     args=(client_connection,),
-        # ).start()
+        threading.Thread(
+            target=handle_client,
+            args=(client_connection,),
+        ).start()
 
 if __name__ == '__main__':  
     start_server()

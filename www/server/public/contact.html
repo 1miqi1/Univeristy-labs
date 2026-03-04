@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Contact</title>
+</head>
+<body>
+    <h1>Contact Me</h1>
+
+    <form action="/submit" method="POST">
+        <fieldset>
+            <legend>Your Details</legend>
+
+            <!-- TODO: Add a label + text input for "Name"
+                 Hint: <label for="name">Name</label>
+                       <input type="text" id="name" name="name" required> -->
+            <label for="name">Name</label>
+            <input type="text" id="name" name="name" required>
+
+            <!-- TODO: Add a label + email input for "Email" -->
+            <label for="email">Email</label>
+            <input type="text" id="email" name="email" required>
+
+            <!-- TODO: Add a label + <textarea> for "Message" (rows=5, cols=40) -->
+            <label for="message">Message</label>
+            <textarea type="text" id="message" name="message" rows=5 cols=40 required></textarea>
+
+            <!-- TODO: Add a label + <select> dropdown for "Subject"
+                 with options: General, Bug Report, Feature Request -->
+            <label for="Subject">Subject</label>
+            <select name="subject">
+                <option value="general">General</option>
+                <option value="bug_report">Bug report</option>
+                <option value="feature_request">Feature request</option>
+            </select>
+
+        </fieldset>
+
+        <!-- TODO: Add a submit button -->
+        <input type="submit" value="Submit">
+
+    </form>
+    <p><a href="index.html">← Back to Home</a></p>
+</body>
+</html>
